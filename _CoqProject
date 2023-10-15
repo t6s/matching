@@ -1,0 +1,18 @@
+# should be changed to "-R theories graph" once the number of files becomes large
+-R . graph
+
+# suppress warnings as done in mathcomp-analysis
+-arg -w -arg -parsing
+-arg -w -arg +undeclared-scope
+-arg -w -arg +non-primitive-record
+-arg -w -arg -ambiguous-paths
+-arg -w -arg -redundant-canonical-projection
+-arg -w -arg -projection-no-head-constant
+
+# turn some warnings into errors
+-arg -w -arg +spurious-ssr-injection
+
+mathcomp_extra.v
+graph.v
+complete_graph.v
+S_suspension.v

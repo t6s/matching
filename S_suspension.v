@@ -226,8 +226,21 @@ Section independence_number.
 (* independence number; often denoted by \alpha(G) in the literature *)
 Definition nindep (G : llugraph) := \max_(S in independent_set G) #|` S |.
 
+Lemma fset0_independent_set (G : llugraph) : fset0 \in independent_set G.
+Proof.
+Abort.
+
+Lemma exists_nindep (G : llugraph) :
+  {S : {fset `V(G)} | S \in independent_set G /\ nindep G = #|`S|}.
+Proof.
+apply: eq_bigmax_cond.
+apply/card_gt0P.
+exists fset0.
+Abort.
+
 (* Hirano and Matsuda *)
 Lemma nindmatch_leq_nindep G : nindmatch G <= nindep G.
+Proof.
 Abort.
 
 Lemma nmatch_minmatch_leq_nindep G :

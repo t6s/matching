@@ -517,7 +517,7 @@ rewrite propeqE; split; first by move/fsubsetP.
 by move=> ?; apply/fsubsetP.
 Qed.
 
-Lemma negE (b : bool) : ~~ b = ~ b :> Prop.
+Lemma negE (b : bool) : ~~ b = (~ b) :> Prop.
 Proof.
 rewrite propeqE; split; first by move/negP.
 by move/negP.

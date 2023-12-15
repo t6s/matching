@@ -851,10 +851,11 @@ Qed.
 Let phi_inj (M : {fset `E(G)}) (Mmax : M \in maximal_matching G)
     (N : {fset `E(G)}) e0 e1 :
   N \in matching G -> e0 \in N -> e1 \in N ->
-  e0 != e1 -> (phi Mmax e0).2 != (phi Mmax e1).2.
+  (phi Mmax e0).2 == (phi Mmax e1).2 -> e0 == e1.
 Proof.
 move/matchingP.
-move=> NmG e0N e1N e01.
+move=> NmG e0N e1N.
+apply:contraLR => e01.
 move: (NmG e0 e1 e0N e1N e01) => /fdisjointP disj01.
 apply/eqP => p01.
 move: (disj01 (phi Mmax e0).2).
@@ -874,8 +875,7 @@ set f : N -> VofESet M := fun n =>  [` (phi_VofESet Mmax (val n)) ].
 apply: (leq_card f).
 move => e0 e1.
 move/eqP => H; apply/eqP; move: H.
-apply: contraLR.
-move/(phi_inj Mmax Nm).
+move/(phi_inj Nm).
 by rewrite 2!fsvalP => /(_ erefl erefl).
 Qed.
 (* Alternate Proof:
@@ -911,13 +911,14 @@ Qed.
 
 Lemma psi_inj (M : {fset `E(G)}) (Mmax : M \in maximal_matching G) (N : {fset `E(G)}) e0 e1 :
   N \in induced_matching G -> e0 \in N -> e1 \in N ->
-  e0 != e1 -> psi Mmax e0 != psi Mmax e1.
+  psi Mmax e0 == psi Mmax e1 -> e0 == e1.
 Proof.
 rewrite /psi.
 move/induced_matchingP.
-move/[apply] /[apply] /[apply] => disj01.  
+move/[apply] /[apply] => disj01.
+apply: contraLR => nege01.
 apply/eqP => p01.
-case: (disj01 (phi Mmax e0).1).
+case: (disj01 nege01 (phi Mmax e0).1).
   rewrite /fdisjoint => /fset0Pn; apply.
   exists (phi Mmax e0).2.
   by rewrite inE phi_boundary phi_boundary_self.
@@ -938,8 +939,7 @@ move=> e0 e1.
 move/eqP => fe01.
 apply/eqP.
 move: fe01.
-apply: contraLR.
-move/(psi_inj Mmax Nind).
+move/(psi_inj Nind).
 rewrite /f.
 by rewrite 2!fsvalP => /(_ erefl erefl).
 Qed.

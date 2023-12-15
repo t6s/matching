@@ -229,9 +229,13 @@ Definition nindep (G : llugraph) := \max_(S in independent_set G) #|` S |.
 Lemma exists_nindep (G : llugraph) :
   {S : {fset `V(G)} | is_independent_set S & nindep G = #|`S|}.
 Proof.
-case: (exists_nmaxmatch G) => M Mmax nmaxM.
-(* can't "rewrite VDMmax_indep in Mmax." *)
-Abort.
+exists ([arg max_(i > fset0 in independent_set G) #|` i |]).
+  case: arg_maxnP.
+    by rewrite !inE /=; exact: is_independent_set0.
+  by move=> i; rewrite !inE /=.
+rewrite /nindep (bigop.bigmax_eq_arg fset0) // !inE /=.
+exact: is_independent_set0.
+Qed.
 
 (* Hirano and Matsuda *)
 Lemma nindmatch_leq_nindep G : nindmatch G <= nindep G.

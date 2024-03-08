@@ -227,7 +227,7 @@ Section independence_number.
 Definition nindep (G : llugraph) := \max_(S in independent_set G) #|` S |.
 
 Lemma exists_nindep (G : llugraph) :
-  {S : {fset `V(G)} | is_independent_set S & nindep G = #|`S|}.
+  {S : {fset `V(G)} | S \in independent_set G & nindep G = #|` S |}.
 Proof.
 exists ([arg max_(i > fset0 in independent_set G) #|` i |]).
   case: arg_maxnP.
@@ -237,11 +237,85 @@ rewrite /nindep (bigop.bigmax_eq_arg fset0) // !inE /=.
 exact: is_independent_set0.
 Qed.
 
+
+Section nindmatch_leq_nindep.
+Variable G : llugraph.
+
+Let tau_ (M : {fset `E(G)}) :
+  `E(G) -> `V(G).
+move=> e.
+move: (boundary_exists e).
+by case/boolp.cid => v _.
+Defined.
+
+Let tau := Eval hnf in tau_.
+
+Print tau_.
+Print tau.
+
+Let tau_boundary (M : {fset `E(G)}) (Mind : M \in induced_matching G) e :
+  tau Mind e \in `d(e).
+Proof.
+rewrite /tau.
+by case: boolp.cid => x.
+Qed.
+
+Let tau_inj (M : {fset `E(G)}) (Mind : M \in induced_matching G) e0 e1 :
+  e0 \in M -> e1 \in M ->
+       tau Mind e0 == tau Mind e1 -> e0 == e1.
+Proof.
+have:(M \in induced_matching G).
+  apply Mind.
+move/(fsubsetP (induced_sub_matching G)).
+move/matchingP.
+move=> MiG e0M e1M.
+apply:contraLR => e01.
+move: (MiG e0 e1 e0M e1M e01) => /fdisjointP disj01.
+apply/eqP => p01.
+move:(disj01 (tau Mind e0)).
+rewrite {2}p01 !tau_boundary.
+by move /(_ erefl) /negP /(_ erefl).
+Qed.
+
+Lemma indepset_in_indmatch (M : {fset `E(G)}) (Mind : M \in induced_matching G) (S : {fset `V(G)}) :
+  forall e f : `E(G), e \in M -> f \in M -> e != f ->
+        tau Mind e \in S -> tau Mind f \in S ->
+        forall g : `E(G), `d(g) != [fset tau Mind e; tau Mind f] ->
+                                             S \in independent_set G.
+Proof.
+move=> e f eM fM ef.
+move:(induced_matchingP M Mind e f eM fM) => disjef.
+move=> teS tfS g.
+have:(is_independent_set' S).
+  rewrite /is_independent_set'.
+  move:(disjef ef g).
+  case.
+Abort.
+(*
+  have:(is_independent_set' S).
+  rewrite /is_independent_set'.
+  exists tau Mind e : `V(G), tau Mind e.
+  move=> u v uV vV.
+  case/boolp.cid => x dxuv.
+  case: (disjef ef g).
+     rewrite /disjef.
+Abort.*)
+
+(*
+bijective: forall [A B : Type], (B -> A) -> Prop
+bijective_on: forall [aT rT : Type], mem_pred rT -> (aT -> rT) -> Prop
+bijective_in: forall [aT rT : Type], mem_pred aT -> (aT -> rT) -> Prop
+ *)
+End nindmatch_leq_nindep.
+
 (* Hirano and Matsuda *)
-Lemma nindmatch_leq_nindep G : nindmatch G <= nindep G.
+Lemma nindmatch_leq_nindep (G : llugraph) : nindmatch G <= nindep G.
 Proof.
 case: (exists_nindmatch G) => M Mind ->.
+case: (exists_nindep G) => S Sindep ->.
+rewrite 2!cardfE.
 Abort.
+
 
 Lemma nmatch_minmatch_leq_nindep G :
   (nmatch G - nminmatch G).*2 <= nindep G.

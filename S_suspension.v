@@ -249,63 +249,46 @@ by case/boolp.cid => v _.
 Defined.
 
 Let tau := Eval hnf in tau_.
-
-Print tau_.
-Print tau.
-
-Let tau_boundary (M : {fset `E(G)}) (Mind : M \in induced_matching G) e :
-  tau Mind e \in `d(e).
+ 
+Let tau_boundary (M : {fset `E(G)}) e :
+  tau M e \in `d(e).
 Proof.
 rewrite /tau.
 by case: boolp.cid => x.
 Qed.
 
-Let tau_inj (M : {fset `E(G)}) (Mind : M \in induced_matching G) e0 e1 :
-  e0 \in M -> e1 \in M ->
-       tau Mind e0 == tau Mind e1 -> e0 == e1.
+Let tau_inj (M : {fset `E(G)}) e0 e1 :
+  M \in matching G -> e0 \in M -> e1 \in M ->
+       tau M e0 == tau M e1 -> e0 == e1.
 Proof.
-have:(M \in induced_matching G).
-  apply Mind.
-move/(fsubsetP (induced_sub_matching G)).
 move/matchingP.
 move=> MiG e0M e1M.
 apply:contraLR => e01.
 move: (MiG e0 e1 e0M e1M e01) => /fdisjointP disj01.
 apply/eqP => p01.
-move:(disj01 (tau Mind e0)).
+move:(disj01 (tau M e0)).
 rewrite {2}p01 !tau_boundary.
 by move /(_ erefl) /negP /(_ erefl).
 Qed.
 
-Lemma indepset_in_indmatch (M : {fset `E(G)}) (Mind : M \in induced_matching G) (S : {fset `V(G)}) :
+Lemma indepset_in_indmatch (M : {fset `E(G)}) (S : {fset `V(G)}) :
+  M \in induced_matching G ->
   forall e f : `E(G), e \in M -> f \in M -> e != f ->
-        tau Mind e \in S -> tau Mind f \in S ->
-        forall g : `E(G), `d(g) != [fset tau Mind e; tau Mind f] ->
+        tau M e \in S -> tau M f \in S ->
+        forall g : `E(G), `d(g) != [fset tau M e; tau M f] ->
                                              S \in independent_set G.
 Proof.
-move=> e f eM fM ef.
-move:(induced_matchingP M Mind e f eM fM) => disjef.
-move=> teS tfS g.
-have:(is_independent_set' S).
-  rewrite /is_independent_set'.
-  move:(disjef ef g).
-  case.
+move=> Mind e f eM fM ef teS tfS g.
+move:(induced_matchingP M Mind e f eM fM ef g) => disjegfg.
+have:(M \in matching G).
+  by move:Mind => /(fsubsetP (induced_sub_matching G)).
+move=>MmG.
+move:(matchingP M MmG e f eM fM ef) => disjef.
+move:disjegfg.
+case.
+  move=>disjeg.
 Abort.
-(*
-  have:(is_independent_set' S).
-  rewrite /is_independent_set'.
-  exists tau Mind e : `V(G), tau Mind e.
-  move=> u v uV vV.
-  case/boolp.cid => x dxuv.
-  case: (disjef ef g).
-     rewrite /disjef.
-Abort.*)
 
-(*
-bijective: forall [A B : Type], (B -> A) -> Prop
-bijective_on: forall [aT rT : Type], mem_pred rT -> (aT -> rT) -> Prop
-bijective_in: forall [aT rT : Type], mem_pred aT -> (aT -> rT) -> Prop
- *)
 End nindmatch_leq_nindep.
 
 (* Hirano and Matsuda *)

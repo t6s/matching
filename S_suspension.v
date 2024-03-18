@@ -236,6 +236,16 @@ Qed.
 Lemma exists_nindep (G : llugraph) :
   {S : {fset `V(G)} | S \in independent_set G & nindep G = #|` S |}.
 Proof.
+apply: eq_bigmax_cond.
+apply/card_gt0P.
+exists fset0.
+rewrite inE.
+apply is_independent_set0.
+Qed.
+
+(* before exists_nindep's proof *)
+(*
+Proof.
 exists ([arg max_(i > fset0 in independent_set G) #|` i |]).
   case: arg_maxnP.
     by rewrite !inE /=; exact: is_independent_set0.
@@ -243,7 +253,7 @@ exists ([arg max_(i > fset0 in independent_set G) #|` i |]).
 rewrite /nindep (bigop.bigmax_eq_arg fset0) // !inE /=.
 exact: is_independent_set0.
 Qed.
-
+*)
 
 Section nindmatch_leq_nindep.
 Variable G : llugraph.

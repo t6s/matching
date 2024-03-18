@@ -257,7 +257,7 @@ rewrite /tau.
 by case: boolp.cid => x.
 Qed.
 
-Let tau_inj (M : {fset `E(G)}) e0 e1 :
+Let tau_matching_inj (M : {fset `E(G)}) e0 e1 :
   M \in matching G -> e0 \in M -> e1 \in M ->
        tau M e0 == tau M e1 -> e0 == e1.
 Proof.

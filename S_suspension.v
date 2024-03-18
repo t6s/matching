@@ -226,6 +226,13 @@ Section independence_number.
 (* independence number; often denoted by \alpha(G) in the literature *)
 Definition nindep (G : llugraph) := \max_(S in independent_set G) #|` S |.
 
+Lemma leq_nindep (G : llugraph) (S : {fset `V(G)}) :
+  S \in independent_set G -> #|` S | <= nindep G.
+Proof.
+move=> Sindep.
+by apply:leq_bigmax_cond.
+Qed.
+
 Lemma exists_nindep (G : llugraph) :
   {S : {fset `V(G)} | S \in independent_set G & nindep G = #|` S |}.
 Proof.

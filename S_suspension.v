@@ -222,6 +222,65 @@ Definition independent_set (G : llugraph) :=
 
 End is_independent_set.
 
+Section get1_boundary.
+Variable G : llugraph.
+(*
+Let get1_boundary_ (G : llugraph) :  `E(G) -> `V(G).
+move=> e.
+move: (boundary_exists e).
+by case/boolp.cid => v.
+Defined.
+Definition get1_boundary := Eval hnf in get1boundary_.
+*)
+
+Definition get1_boundary (e : `E(G)) :=
+  sval (boolp.cid (boundary_exists e)).
+
+Local Notation tau := get1_boundary.
+
+Lemma get1_in_boundary e : get1_boundary e \in `d(e).
+Proof. by rewrite /tau; case: boolp.cid => x. Qed.
+
+Lemma get1_boundary_inj (M : {fset `E(G)}) :
+  M \in matching G -> {in M & M, injective tau}.
+Proof.
+move => /matchingP MiG e0 e1 e0M e1M /eqP H.
+apply/eqP; move: H; apply:contraLR => e01.
+move: (MiG e0 e1 e0M e1M e01) => /fdisjointP disj01.
+apply/eqP => p01.
+move:(disj01 (tau e0)).
+rewrite {2}p01 !get1_in_boundary //.
+by move /(_ erefl) /negP /(_ erefl).
+Qed.
+
+(* move to graph.v *)
+Lemma boundary_sig2 (e : `E(G)) : {uv | uv.1 != uv.2 /\ `d(e) = [fset uv.1; uv.2]}.
+Proof. exact/cardfs2_sig/boundary_card2. Qed.
+
+Lemma im_get1_boundary_indep (M : {fset `E(G)}) :
+  M \in induced_matching G ->
+        [fset tau e | e in M] \in independent_set G.
+Proof.
+move=> /[dup] Mind /induced_matchingP Mind'.
+rewrite !inE /=.
+apply/forallP => x.
+apply/fsubsetP.
+have:= boundary_sig2 x => -[] [] u v /= [] /[swap] dxuv /[swap] /[!dxuv] dxM.
+have ux : u \in [fset u; v] by rewrite !inE eqxx.
+have vx : v \in [fset u; v] by rewrite !inE eqxx orbT.
+have:= dxM u ux => /imfsetP [] e /= eM ute.
+have:= dxM v vx => /imfsetP [] f /= fM vtf.
+rewrite ute vtf => tauef.
+have ef : e != f by apply/eqP; move: tauef => /[swap] ->; rewrite eqxx.
+have:= Mind' e f eM fM ef x.
+apply/orP.
+rewrite dxuv [in X in _ || X]fsetUC.
+rewrite /fdisjoint !fsetIUr !fsetI1 ute vtf !get1_in_boundary //.
+by rewrite !fsetU_eq0 -!cardfs_eq0 !cardfs1 /=.
+Qed.
+
+End get1_boundary.
+
 Section independence_number.
 (* independence number; often denoted by \alpha(G) in the literature *)
 Definition nindep (G : llugraph) := \max_(S in independent_set G) #|` S |.
@@ -239,7 +298,7 @@ Proof.
 apply: eq_bigmax_cond.
 apply/card_gt0P.
 exists fset0.
-rewrite inE.
+rewrite inE /=.
 apply is_independent_set0.
 Qed.
 
@@ -253,69 +312,18 @@ exists ([arg max_(i > fset0 in independent_set G) #|` i |]).
 rewrite /nindep (bigop.bigmax_eq_arg fset0) // !inE /=.
 exact: is_independent_set0.
 Qed.
-*)
-
-Section nindmatch_leq_nindep.
-Variable G : llugraph.
-
-Let tau_ (M : {fset `E(G)}) :
-  `E(G) -> `V(G).
-move=> e.
-move: (boundary_exists e).
-by case/boolp.cid => v _.
-Defined.
-
-Let tau := Eval hnf in tau_.
- 
-Let tau_boundary (M : {fset `E(G)}) e :
-  tau M e \in `d(e).
-Proof.
-rewrite /tau.
-by case: boolp.cid => x.
-Qed.
-
-Let tau_matching_inj (M : {fset `E(G)}) e0 e1 :
-  M \in matching G -> e0 \in M -> e1 \in M ->
-       tau M e0 == tau M e1 -> e0 == e1.
-Proof.
-move/matchingP.
-move=> MiG e0M e1M.
-apply:contraLR => e01.
-move: (MiG e0 e1 e0M e1M e01) => /fdisjointP disj01.
-apply/eqP => p01.
-move:(disj01 (tau M e0)).
-rewrite {2}p01 !tau_boundary.
-by move /(_ erefl) /negP /(_ erefl).
-Qed.
-
-Lemma indepset_in_indmatch (M : {fset `E(G)}) (S : {fset `V(G)}) :
-  M \in induced_matching G ->
-  forall e f : `E(G), e \in M -> f \in M -> e != f ->
-        tau M e \in S -> tau M f \in S ->
-        forall g : `E(G), `d(g) != [fset tau M e; tau M f] ->
-                                             S \in independent_set G.
-Proof.
-move=> Mind e f eM fM ef teS tfS g.
-move:(induced_matchingP M Mind e f eM fM ef g) => disjegfg.
-have:(M \in matching G).
-  by move:Mind => /(fsubsetP (induced_sub_matching G)).
-move=>MmG.
-move:(matchingP M MmG e f eM fM ef) => disjef.
-move:disjegfg.
-case.
-  move=>disjeg.
-Abort.
-
-End nindmatch_leq_nindep.
+ *)
 
 (* Hirano and Matsuda *)
 Lemma nindmatch_leq_nindep (G : llugraph) : nindmatch G <= nindep G.
 Proof.
-case: (exists_nindmatch G) => M Mind ->.
-case: (exists_nindep G) => S Sindep ->.
-rewrite 2!cardfE.
-Abort.
-
+case: (exists_nindmatch G) => M Mind nM.
+have mM : M \in matching G by have:= induced_sub_matching G => /fsubsetP; exact.
+have:= im_get1_boundary_indep Mind.
+set T := [fset get1_boundary e | e in M].
+have TM: #|` T| = #|` M| by apply: card_in_imfset => ? ? /=; exact: (get1_boundary_inj mM).
+by move=> Tind; rewrite nM -TM; exact: leq_bigmax_cond.
+Qed.
 
 Lemma nmatch_minmatch_leq_nindep G :
   (nmatch G - nminmatch G).*2 <= nindep G.

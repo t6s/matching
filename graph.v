@@ -134,12 +134,12 @@ apply: (iffP idP) => H.
   exact:H.
 Qed.
 
-Definition boundary_inj :=
+Definition inj_boundary :=
   {in S & S, injective (@LooplessUndirectedGraph.boundary G)}.
 
 Definition trivIbound := trivIfset [fset `d(x) | x in S].
 
-Lemma matching_boundary_inj : is_matching -> boundary_inj.
+Lemma matching_inj_boundary : is_matching -> inj_boundary.
 Proof.
 move=> MmG e1 e2 e1M e2M.
 move/is_matchingP: MmG => /(_ e1 e2 e1M e2M).
@@ -161,11 +161,11 @@ Qed.
 
 (* TODO: rename? *)
 Lemma is_matching_triv_inj :
-  boundary_inj /\ trivIbound <-> is_matching.
+  inj_boundary /\ trivIbound <-> is_matching.
 Proof.
 split; last first.
   move=> ?.
-  by split; [apply: matching_boundary_inj | apply: matching_trivIbound].
+  by split; [apply: matching_inj_boundary | apply: matching_trivIbound].
 case.
 move=> bi.
 move/trivIfsetP=> ibt.
@@ -213,7 +213,7 @@ by rewrite !inordK.
 Qed.
 End matching_trivIbound_counter_example.
 
-Module matching_boundary_inj_counter_example.
+Module matching_inj_boundary_counter_example.
 Definition V := [finType of 'I_3].
 Definition E := [finType of 'I_2].
 Notation v0 := (ord0 : V).
@@ -227,8 +227,8 @@ Lemma axiom (e : E) : #|` d e | = 2.
 Proof. by rewrite /d; case: ifP => _; rewrite cardfs2. Qed.
 Definition G := LooplessUndirectedGraph.mk axiom.
 
-Example boundary_inj_is_not_necessarily_matching :
-  exists S : {fset `E(G)}, boundary_inj S /\ ~ @is_matching G S.
+Example inj_boundary_is_not_necessarily_matching :
+  exists S : {fset `E(G)}, inj_boundary S /\ ~ @is_matching G S.
 Proof.
 exists (fsetT `E(G)); split.
   move => e f _ _ /=.
@@ -238,7 +238,7 @@ exists (fsetT `E(G)); split.
 move /is_matchingP /(_ e0 e1) /[!inE] /(_ erefl erefl erefl).
 by move /fdisjointP /(_ v1) /[!inE] /(_ erefl).
 Qed.
-End matching_boundary_inj_counter_example.
+End matching_inj_boundary_counter_example.
 
 Section matching_lemmas.
 
@@ -735,7 +735,7 @@ rewrite !inE /= => mM.
 move/matching_trivIbound : (mM).
 rewrite /trivIbound /trivIfset /= => H.
 rewrite -(eqP H). (* rewritable since the LHS is an fcover *)
-rewrite big_imfset /= ; last exact: matching_boundary_inj.
+rewrite big_imfset /= ; last exact: matching_inj_boundary.
 under eq_bigr do rewrite boundary_card2.
 by rewrite big_const_seq.
 Qed.

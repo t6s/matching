@@ -291,8 +291,14 @@ Proof. by rewrite inE. Qed.
 Lemma cardfsT (K : finType) : #|` fsetT K | = #| K |.
 Proof. by rewrite cardE card_imfset. Qed.
 
-Lemma fsubsetT (K : finType) (A : {fset K}) : (A `<=` fsetT K).
+Lemma fsubsetT (K : finType) (A : {fset K}) : A `<=` fsetT K.
 Proof. by apply/fsubsetP=> ?; rewrite inE. Qed.
+
+Lemma fsetTI (K : finType) (A : {fset K}) : A `&` fsetT K = A.
+Proof. by apply/eqP; rewrite -/(fsubset _ _) fsubsetT. Qed.
+
+Lemma fsetIT (K : finType) (A : {fset K}) : fsetT K `&` A = A.
+Proof. by rewrite fsetIC fsetTI. Qed.
 
 Lemma fsetI_bigcupl (K : choiceType) (I : eqType) (r : seq I)
       (A : {fset K}) (P : pred I) (F : I -> {fset K}) :

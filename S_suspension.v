@@ -259,7 +259,15 @@ Qed.
 
 Lemma nmatch_minmatch_leq_nindep G :
   (nmatch G - nminmatch G).*2 <= nindep G.
-Abort.
+Proof.
+case: (exists_nminmatch G) => N /VDMmax_indep [] ? ? ->.
+set X := leqLHS.
+suff: X <= #|` fsetT `V(G) `\` VofESet N |.
+  move/leq_trans; apply.
+  exact: leq_bigmax_cond.
+rewrite /X cardfsD fsetIT matching_double_card // doubleB cardfsT.
+exact/leq_sub2r/double_nmatch_leq_cardVG.
+Qed.
 
 Lemma nindep1P G (x : `V(G)) : nindep G = 1 <-> is_complete_graph G.
 Proof.

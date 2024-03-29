@@ -10,39 +10,85 @@ Unset Printing Implicit Defensive.
 
 Local Open Scope fset_scope.
 
-Section is_independent_set.
 
-Definition is_independent_set (G : llugraph) (S : {fset `V(G)}) :=
-  [forall e : `E(G), ~~ (`d(e) `<=` S)].
+Section independent_set.
+Variable G : llugraph.
 
-(* TODO: rename *)
-Definition is_independent_set' (G : llugraph) (S : {fset `V(G)}) :=
-  forall u v, u \in S -> v \in S ->
-    ~ exists e : `E(G), `d(e) = [fset u; v].
+Section pred.
+Variable S : {fset `V(G)}.
 
-Lemma is_independent_set1 G (x : `V(G)) : is_independent_set [fset x].
+Definition is_independent_set := [forall e : `E(G), ~~ (`d(e) `<=` S)].
+
+Lemma is_independent_setP :
+  reflect {in S & S, forall u v, ~ exists e : `E(G), `d(e) = [fset u; v]}
+          is_independent_set.
 Proof.
+apply: (iffP idP).
+  move=> /forallP idG u v uS vS [] e deuv.
+  have := idG e => /negP; apply; rewrite deuv.
+  by apply/fsubsetP => x; rewrite !inE => /orP [] /eqP ->.
+move=> H; apply/forallP => e.
+apply/negP => /fsubsetP.
+rewrite /{subset _ <= _}.
+have := boundary_card2 e => /cardfs2_sig [] [u v] /= [] uv deuv.
+rewrite deuv.
+case/boolP: (u \in S); last first.
+  move => /[swap] /(_ u) /[swap] /negPf ->.
+  by rewrite !inE eqxx /= => /(_ erefl).
+move=> uS /(_ v).
+rewrite !inE eqxx orbT => /(_ erefl).
+have := H _ _ uS => /[apply].
+by apply; exists e.
+Qed.
+End pred.          
+
+Definition independent_set := [fset S : {fset `V(G)} | is_independent_set S].
+
+(* independence number; often denoted by \alpha(G) in the literature *)
+Definition nindep := \max_(S in independent_set) #|` S |.
+
+End independent_set.
+
+
+Section independent_set_lemmas.
+Variables (G : llugraph).
+
+Local Notation independent_set := (independent_set G).
+
+Lemma independent_setP (S : {fset `V(G)}) :
+  reflect
+    {in S & S, forall u v, ~ exists e : `E(G), `d(e) = [fset u; v]}
+    (S \in independent_set).
+Proof. by rewrite !inE andTb; exact: is_independent_setP. Qed.
+
+Lemma fset1_independent (x : `V(G)) : [fset x ] \in independent_set.
+Proof.
+rewrite !inE /=.
 apply/forallP => e.
 apply/negP=> /fsubset_leq_card.
 by rewrite boundary_card2 cardfs1.
 Qed.
 
-Lemma is_independent_set0 G : is_independent_set (fset0 : {fset `V(G)}).
+Lemma fset0_independent : fset0 \in independent_set.
 Proof.
+rewrite !inE /=.
 apply/forallP => e.
 apply/negP=> /fsubset_leq_card.
 by rewrite boundary_card2 cardfs0.
 Qed.
 
 Section classical.
-Lemma is_independent_setP' G (S : {fset `V(G)}) :
+Let is_independent_set' (S : {fset `V(G)}) :=
+  {in S & S, forall u v, ~ exists e : `E(G), `d(e) = [fset u; v]}.
+
+Let is_independent_setP' (S : {fset `V(G)}) :
   (is_independent_set' S) <-> (is_independent_set S).
 Proof.
 Import boolp.
 have -> : is_independent_set S <-> forall e : `E(G), ~~ (`d(e) `<=` S)
   by split; [move/forallP | move=>?; apply/forallP].
 suff -> : (is_independent_set' S) = (forall e : `E(G), ~~ (`d(e) `<=` S)) by [].
-rewrite /is_independent_set /is_independent_set'.
+rewrite /is_independent_set /is_independent_set' /prop_in11.
 under [in LHS]eq_forall => u.
   under eq_forall => v.
     rewrite -forallNE.
@@ -71,50 +117,7 @@ done.
 Qed.
 End classical.
 
-Lemma is_independent_setP G (S : {fset `V(G)}) :
-  is_independent_set S <-> is_independent_set' S.
-Proof.
-split.
-  move=> /forallP idG u v uS vS [] e deuv.
-  have := idG e => /negP; apply; rewrite deuv.
-  by apply/fsubsetP => x; rewrite !inE => /orP [] /eqP ->.
-move=> H; apply/forallP => e.
-apply/negP => /fsubsetP.
-rewrite /{subset _ <= _}.
-have := boundary_card2 e => /cardfs2_sig [] [u v] /= [] uv deuv.
-rewrite deuv.
-case/boolP: (u \in S); last first.
-  move => /[swap] /(_ u) /[swap] /negPf ->.
-  by rewrite !inE eqxx /= => /(_ erefl).
-move=> uS /(_ v).
-rewrite !inE eqxx orbT => /(_ erefl).
-have := H _ _ uS => /[apply].
-by apply; exists e.
-Qed.
-
-Definition edgeI (G : llugraph) (S : {fset `E(G)}) e :=
-  [exists f, (f \in S) && ~~ [disjoint `d(e) & `d(f)]%fset].
-
-Lemma edgeIP (G : llugraph) (S : {fset `E(G)}) e :
-  reflect (exists f, f \in S /\ ~ [disjoint `d(e) & `d(f)]%fset) (edgeI S e).
-Proof.
-apply: existsPP=> f.
-apply: andPP; first exact: idP.
-by apply: negP.
-Qed.
-
-Lemma edgeIPn (G : llugraph) (S : {fset `E(G)}) e :
-  reflect (forall f, f \in S -> [disjoint `d(e) & `d(f)]%fset) (~~ edgeI S e).
-Proof.
-apply: (iffP idP).
-  rewrite negb_exists=> /forallP H f fS.
-  by have:= H f; rewrite negb_and -implybE negbK => /implyP /(_ fS).
-move=> H.
-apply/edgeIP=> -[] f [] fS.
-by apply; exact: (H f fS).
-Qed.
-
-Lemma indepC_edgeI (G : llugraph) (S : {fset `E(G)}) :
+Lemma indepC_edgeI (S : {fset `E(G)}) :
   is_independent_set (fsetT `V(G) `\` VofESet S) <->
   forall e, edgeI S e.
 Proof.
@@ -143,31 +146,6 @@ rewrite andbT; apply/imfsetP.
 by exists f.
 Qed.
 
-Lemma fproperD_neq0 (K : choiceType) (A B : {fset K}) :
-  A `<` B -> B `\` A != fset0.
-Proof.
-move/(fsetDpS (fsubset_refl B)).
-by rewrite fsetDv fproper0.
-Qed.
-
-Lemma maxmatch_edgeI_opp (G : llugraph) (M : {fset `E(G)}) :
-  M \in matching G ->
-  (forall e, exists f, f \in M /\ ~ [disjoint `d(e) & `d(f)]%fset) ->
-  M \in maximal_matching G.
-Proof.
-move=> MmG H.
-apply/maximal_matchingP; split=> // S MS.
-apply/negP=> /matchingP H0.
-have:= MS => /fproperD_neq0 /fset0Pn [] e.
-rewrite !inE => /andP [] enM eS.
-have:= H e => -[] f [] fM nddef.
-have ef: e != f by move: enM; apply: contra => /eqP ->.
-apply/nddef/fdisjointP=> u ude.
-apply/negP=> udf.
-have fS : f \in S by have:= MS => /fproper_sub /fsubsetP /(_ f); apply.
-by have:= H0 e f eS fS ef.
-Qed.
-
 (*
 Def.
 nindep := \max_(S in indepenedent_set G) #|` S |
@@ -180,12 +158,13 @@ Lem.
 2 * (nmatch - nmatch) <= nindep
 *)          
 
-Lemma VDMmax_indep (G : llugraph) (M : {fset `E(G)}) :
+(* TODO: rename *)
+Lemma VDMmax_indep (M : {fset `E(G)}) :
   M \in maximal_matching G <->
   M \in matching G /\
-    is_independent_set (fsetT `V(G) `\` VofESet M).
+    (fsetT `V(G) `\` VofESet M) \in independent_set.
 Proof.
-rewrite is_independent_setP.
+rewrite -(rwP (independent_setP _)) /=.
 split.
   move => Mmax.
   split; first by case/maximal_matchingP: Mmax.
@@ -210,56 +189,16 @@ split.
   apply /imfsetP.
   by exists f.            
 case=> MmG.
-rewrite -is_independent_setP indepC_edgeI /edgeI => H.
+rewrite (rwP (is_independent_setP _)) indepC_edgeI /edgeI => H.
 apply maxmatch_edgeI_opp => //.
 move => e.
 have := H e => /existsP [f] /andP [fM] /negP ndedf.
 by exists f; split.
 Qed.
 
-Definition independent_set (G : llugraph) :=
-  [fset S : {fset `V(G)} | is_independent_set S].
-
-End is_independent_set.
-
-Section get1_boundary.
-Variable G : llugraph.
-(*
-Let get1_boundary_ (G : llugraph) :  `E(G) -> `V(G).
-move=> e.
-move: (boundary_exists e).
-by case/boolp.cid => v.
-Defined.
-Definition get1_boundary := Eval hnf in get1boundary_.
-*)
-
-Definition get1_boundary (e : `E(G)) :=
-  sval (boolp.cid (boundary_exists e)).
-
-Local Notation tau := get1_boundary.
-
-Lemma get1_in_boundary e : get1_boundary e \in `d(e).
-Proof. by rewrite /tau; case: boolp.cid => x. Qed.
-
-Lemma get1_boundary_inj (M : {fset `E(G)}) :
-  M \in matching G -> {in M & M, injective tau}.
-Proof.
-move => /matchingP MiG e0 e1 e0M e1M /eqP H.
-apply/eqP; move: H; apply:contraLR => e01.
-move: (MiG e0 e1 e0M e1M e01) => /fdisjointP disj01.
-apply/eqP => p01.
-move:(disj01 (tau e0)).
-rewrite {2}p01 !get1_in_boundary //.
-by move /(_ erefl) /negP /(_ erefl).
-Qed.
-
-(* move to graph.v *)
-Lemma boundary_sig2 (e : `E(G)) : {uv | uv.1 != uv.2 /\ `d(e) = [fset uv.1; uv.2]}.
-Proof. exact/cardfs2_sig/boundary_card2. Qed.
-
 Lemma im_get1_boundary_indep (M : {fset `E(G)}) :
   M \in induced_matching G ->
-        [fset tau e | e in M] \in independent_set G.
+        [fset get1_boundary e | e in M] \in independent_set.
 Proof.
 move=> /[dup] Mind /induced_matchingP Mind'.
 rewrite !inE /=.
@@ -279,11 +218,10 @@ rewrite /fdisjoint !fsetIUr !fsetI1 ute vtf !get1_in_boundary //.
 by rewrite !fsetU_eq0 -!cardfs_eq0 !cardfs1 /=.
 Qed.
 
-End get1_boundary.
+End independent_set_lemmas.
 
-Section independence_number.
-(* independence number; often denoted by \alpha(G) in the literature *)
-Definition nindep (G : llugraph) := \max_(S in independent_set G) #|` S |.
+
+Section nindep_lemmas.
 
 Lemma leq_nindep (G : llugraph) (S : {fset `V(G)}) :
   S \in independent_set G -> #|` S | <= nindep G.
@@ -292,27 +230,21 @@ move=> Sindep.
 by apply:leq_bigmax_cond.
 Qed.
 
+Import Order.Theory.
+
 Lemma exists_nindep (G : llugraph) :
   {S : {fset `V(G)} | S \in independent_set G & nindep G = #|` S |}.
 Proof.
-apply: eq_bigmax_cond.
-apply/card_gt0P.
-exists fset0.
-rewrite inE /=.
-apply is_independent_set0.
-Qed.
-
-(* before exists_nindep's proof *)
 (*
-Proof.
-exists ([arg max_(i > fset0 in independent_set G) #|` i |]).
-  case: arg_maxnP.
-    by rewrite !inE /=; exact: is_independent_set0.
-  by move=> i; rewrite !inE /=.
-rewrite /nindep (bigop.bigmax_eq_arg fset0) // !inE /=.
-exact: is_independent_set0.
-Qed.
- *)
+under (@boolp.funext _ _ (fun S => nindep G = #|` S|)) => S.
+  rewrite /nindep.
+  rewrite (bigmax_eq_arg _ fset0) ?fset0_independent //.
+  over.
+exists [arg max_(i > fset0 in independent_set G) #|` i|] => //.
+*)
+eexists; last by rewrite /nindep (bigmax_eq_arg _ fset0) ?fset0_independent.
+by case: arg_maxP => //; exact: fset0_independent.
+Qed.  
 
 (* Hirano and Matsuda *)
 Lemma nindmatch_leq_nindep (G : llugraph) : nindmatch G <= nindep G.
@@ -340,7 +272,7 @@ have: forall S : {fset `V(G)}, is_independent_set S -> #|`  S| < 2.
   rewrite -leqNgt.
 Abort.
 
-End independence_number.
+End nindep_lemmas.
 
 Section S_suspension.
 End S_suspension.

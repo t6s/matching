@@ -95,6 +95,10 @@ by exists x, y; rewrite xy dexy; split; [| split => //];
    rewrite inE !in_fset1 eqxx ?orbT ?orTb.
 Qed.
 
+Lemma boundary_sig2 G (e : `E(G)) :
+  {uv | uv.1 != uv.2 /\ `d(e) = [fset uv.1; uv.2]}.
+Proof. exact/cardfs2_sig/boundary_card2. Qed.
+
 Lemma boundary_disj_neq G (e f : `E(G)) : [disjoint `d(e) & `d(f)] -> e != f.
 Proof.
 apply:contraTN => /eqP ->.
@@ -102,6 +106,7 @@ by rewrite /fdisjoint fsetIid -cardfs_eq0 boundary_card2.
 Qed.
 
 End llugraph_lemmas.
+
 
 Section matching.
 Variable G : llugraph.
@@ -187,6 +192,7 @@ Lemma leq_nmatch (S : {fset `E(G)}) : S \in matching -> #|` S | <= nmatch.
 Proof. by move=> mG; apply:leq_bigmax_cond. Qed.
 
 End matching.
+
 
 Module matching_trivIbound_counter_example.
 Definition V := [finType of 'I_2].
@@ -340,6 +346,40 @@ case/orP => He0; case/orP => He1.
 Qed.  
 
 End matching_lemmas.
+
+
+Section get1_boundary.
+Variable G : llugraph.
+
+(*
+Let get1_boundary_ (G : llugraph) :  `E(G) -> `V(G).
+move=> e.
+move: (boundary_exists e).
+by case/boolp.cid => v.
+Defined.
+Definition get1_boundary := Eval hnf in get1boundary_.
+*)
+Definition get1_boundary (e : `E(G)) :=
+  sval (boolp.cid (boundary_exists e)).
+
+Local Notation tau := get1_boundary.
+
+Lemma get1_in_boundary e : get1_boundary e \in `d(e).
+Proof. by rewrite /tau; case: boolp.cid => x. Qed.
+
+Lemma get1_boundary_inj (M : {fset `E(G)}) :
+  M \in matching G -> {in M & M, injective tau}.
+Proof.
+move => /matchingP MiG e0 e1 e0M e1M /eqP H.
+apply/eqP; move: H; apply:contraLR => e01.
+move: (MiG e0 e1 e0M e1M e01) => /fdisjointP disj01.
+apply/eqP => p01.
+move:(disj01 (tau e0)).
+rewrite {2}p01 !get1_in_boundary //.
+by move /(_ erefl) /negP /(_ erefl).
+Qed.
+End get1_boundary.
+
 
 Section induced_matching.
 Variable G : llugraph.
@@ -751,6 +791,54 @@ by rewrite matching_double_card // leq_double H2.
 Qed.
 
 End VofESet.
+
+
+(* TODO: remove duplications with graph.VofESet *)
+Section edgeI.
+(* NB: eqv. to ~~ [disjoint fcover [fset `d(f) | f in S] & `d(e)] *)
+Definition edgeI (G : llugraph) (S : {fset `E(G)}) e :=
+  [exists f, (f \in S) && ~~ [disjoint `d(e) & `d(f)]%fset].
+
+Lemma edgeIP (G : llugraph) (S : {fset `E(G)}) e :
+  reflect (exists f, f \in S /\ ~ [disjoint `d(e) & `d(f)]%fset) (edgeI S e).
+Proof.
+apply: existsPP=> f.
+apply: andPP; first exact: idP.
+by apply: negP.
+Qed.
+
+Lemma edgeIPn (G : llugraph) (S : {fset `E(G)}) e :
+  reflect (forall f, f \in S -> [disjoint `d(e) & `d(f)]%fset) (~~ edgeI S e).
+Proof.
+apply: (iffP idP).
+  rewrite negb_exists=> /forallP H f fS.
+  by have:= H f; rewrite negb_and -implybE negbK => /implyP /(_ fS).
+move=> H.
+apply/edgeIP=> -[] f [] fS.
+by apply; exact: (H f fS).
+Qed.
+
+(* TODO: rename *)
+Lemma maxmatch_edgeI_opp (G : llugraph) (M : {fset `E(G)}) :
+  M \in matching G ->
+  (forall e, exists f, f \in M /\ ~ [disjoint `d(e) & `d(f)]%fset) ->
+  M \in maximal_matching G.
+Proof.
+move=> MmG H.
+apply/maximal_matchingP; split=> // S MS.
+apply/negP=> /matchingP H0.
+have:= MS => /fproperDneq0 /fset0Pn [] e.
+rewrite !inE => /andP [] enM eS.
+have:= H e => -[] f [] fM nddef.
+have ef: e != f by move: enM; apply: contra => /eqP ->.
+apply/nddef/fdisjointP=> u ude.
+apply/negP=> udf.
+have fS : f \in S by have:= MS => /fproper_sub /fsubsetP /(_ f); apply.
+by have:= H0 e f eS fS ef.
+Qed.
+
+End edgeI.
+
 
 Section matching_number_lemmas.
 

@@ -458,6 +458,13 @@ case=> /eqP ->; case=> /eqP ->; rewrite ?eqxx //.
 by rewrite fsetUC.
 Qed.
 
+Lemma fproperDneq0 (K : choiceType) (A B : {fset K}) :
+  A `<` B -> B `\` A != fset0.
+Proof.
+move/(fsetDpS (fsubset_refl B)).
+by rewrite fsetDv fproper0.
+Qed.
+
 End finmap_ext.
 
 Section misc.

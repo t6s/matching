@@ -137,7 +137,8 @@ Definition is_KT G := isomorphic G (`K `V(G)).
 *)
 
 Definition is_complete_graph G :=
-  injective (fun e : `E(G) => `d(e)) /\ forall v w : `V(G), v != w -> exists e : `E(G), `d(e) = [fset v; w].
+  injective (fun e : `E(G) => `d(e)) /\
+    forall v w : `V(G), v != w -> exists e : `E(G), `d(e) = [fset v; w].
 
 Lemma KT_is_complete (T : finType) : is_complete_graph `K T.
 Proof.

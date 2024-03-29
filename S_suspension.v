@@ -269,16 +269,69 @@ rewrite /X cardfsD fsetIT matching_double_card // doubleB cardfsT.
 exact/leq_sub2r/double_nmatch_leq_cardVG.
 Qed.
 
-Lemma nindep1P G (x : `V(G)) : nindep G = 1 <-> is_complete_graph G.
+Lemma nindep_gt0 G (x : `V(G)) : 0 < nindep G.
 Proof.
-split.
-(*rewrite /nindep.*)
-move=> nindepG1.
-have: forall S : {fset `V(G)}, is_independent_set S -> #|`  S| < 2.
-  move=> S.
-  apply: contraLR.
-  rewrite -leqNgt.
-Abort.
+have:= (fset1_independent x) => /leq_nindep.
+by apply: leq_trans; rewrite cardfs1.
+Qed.
+
+Lemma and_iff2l (A B C : Prop) : (A -> (B <-> C)) <-> (A /\ B <-> A /\ C).
+Proof. tauto. Qed.
+
+Local Notation is_complete_graph' G :=
+  (forall v w : `V(G), v != w -> exists e : `E(G), `d(e) = [fset v; w]).
+
+Lemma not_adjacent_indepP G (x y : `V(G)) :
+  x != y -> ~ (exists e, `d(e) = [fset x; y]) <->
+              (exists S, S \in independent_set G /\ x \in S /\ y \in S).
+Proof.
+move=> xy; split.
+  move=> H; exists [fset x; y].
+  rewrite !inE /= !eqxx orbT /=; split=> //.
+  apply/is_independent_setP=> u v.
+  rewrite !inE=> /orP [] /eqP -> /orP [] /eqP ->.
+  - case=> e; rewrite fsetUid => e1.
+    by have:= boundary_card2 e; rewrite e1 cardfs1.
+  - by [].
+  - by under boolp.eq_exists do rewrite fsetUC.
+  - case=> e; rewrite fsetUid => e1.
+    by have:= boundary_card2 e; rewrite e1 cardfs1.
+case => /= S [] /independent_setP SG [] xS yS.
+exact: SG.
+Qed.
+
+Lemma adjacent_indepP G (x y : `V(G)) :
+  x != y -> (exists e, `d(e) = [fset x; y]) <->
+              ~ (exists S, S \in independent_set G /\ x \in S /\ y \in S).
+Proof. rewrite boolp.iff_notr; exact: not_adjacent_indepP. Qed.
+
+Lemma nindep1P G (x : `V(G)) :
+  injective (fun e : `E(G) => `d(e)) /\ nindep G = 1 <-> is_complete_graph G.
+Proof.
+rewrite -and_iff2l=> _.
+have:= nindep_gt0 x.
+rewrite leq_eqVlt => /orP [/eqP H|].
+  rewrite -H; split=> // _ v w vw.
+  rewrite adjacent_indepP // => -[] /= S [] SG [] vS wS.
+  have: #|` S| <= nindep G by exact: leq_bigmax_cond.
+  rewrite -H.
+  have: 1 < #|` S|.
+    rewrite cardfE; apply/card_gt1P.
+    exists [` vS], [` wS]; split; rewrite ?inE //.
+    by move/leq_trans/[apply].
+have := exists_nindep G => -[] S Sind ->.
+rewrite [X in 1 < X]cardfE=> /card_gt1P /= [] [] y /= yS [] [] z /= zS [] yS' zS' yz'.
+have := Sind => /independent_setP => /(_ y z yS zS) Sind'.
+have yz: y != z.
+  move: yz'; apply: contra=> /eqP yz.
+  by apply/eqP/val_inj.
+clear yS' zS' yz'.
+rewrite (rwP eqP) -(rwP (cardfs1P S)) [X in X <-> _](_ : _ <-> False); last first.
+  split=> //.
+  case=> u uS; move: yS; rewrite uS inE; move: zS; rewrite uS inE => /eqP <-.
+  exact/negP.
+by split=> // /(_ y z yz).
+Qed.
 
 End nindep_lemmas.
 

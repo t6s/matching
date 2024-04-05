@@ -280,6 +280,7 @@ Proof. tauto. Qed.
 Local Notation is_complete_graph' G :=
   (forall v w : `V(G), v != w -> exists e : `E(G), `d(e) = [fset v; w]).
 
+(* constructive *)
 Lemma not_adjacent_indepP G (x y : `V(G)) :
   x != y -> ~ (exists e, `d(e) = [fset x; y]) <->
               (exists S, S \in independent_set G /\ x \in S /\ y \in S).
@@ -292,17 +293,23 @@ move=> xy; split.
   - case=> e; rewrite fsetUid => e1.
     by have:= boundary_card2 e; rewrite e1 cardfs1.
   - by [].
-  - by under boolp.eq_exists do rewrite fsetUC.
+  - have:= H => /[swap] -[] e /[!(fsetUC [fset y])] <-; apply.
+    by exists e.
   - case=> e; rewrite fsetUid => e1.
     by have:= boundary_card2 e; rewrite e1 cardfs1.
 case => /= S [] /independent_setP SG [] xS yS.
 exact: SG.
 Qed.
 
+(* classical *)
 Lemma adjacent_indepP G (x y : `V(G)) :
   x != y -> (exists e, `d(e) = [fset x; y]) <->
               ~ (exists S, S \in independent_set G /\ x \in S /\ y \in S).
-Proof. rewrite boolp.iff_notr; exact: not_adjacent_indepP. Qed.
+Proof. by rewrite boolp.iff_notr; exact: not_adjacent_indepP. Qed.
+
+(* the difference in the classicality of the above two lemmas suggests that
+   (exists e, `d(e) = [fset x; y]) is a strong assertion. *)
+
 
 Lemma nindep1P G (x : `V(G)) :
   injective (fun e : `E(G) => `d(e)) /\ nindep G = 1 <-> is_complete_graph G.

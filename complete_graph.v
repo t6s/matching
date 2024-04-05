@@ -255,7 +255,7 @@ suff: forall M, M \in induced_matching G -> #|` M | <= 1.
   apply/eqP/anti_leq.
   rewrite {}H /=.
   rewrite/nindmatch.
-  have := (@leq_bigmax_cond (fset_finType `E(G)) _ (fun x => #|` x |) [fset e] eim).
+  have := (@leq_bigmax_cond {fset `E(G)} _ (fun x => #|` x |) [fset e] eim).
   by rewrite cardfs1.
 move=> M /induced_matchingP H.
 apply/negbNE/negP; rewrite -ltnNge cardfE.

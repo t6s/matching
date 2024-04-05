@@ -369,8 +369,7 @@ have:= fsetM_seq A B => /perm_size ->.
 by rewrite size_allpairs.
 Qed.
 
-Definition fset_diag [K : choiceType] (A : {fset K}) :=
-  [fset ((x, x) : prod_choiceType K K) | x in A].
+Definition fset_diag [K : choiceType] (A : {fset K}) := [fset (x, x) | x in A].
 
 Lemma in_fset_diag [K : choiceType] (A : {fset K}) (a b : K) :
  ((a, b) \in fset_diag A) = (a \in A) && (a == b).
@@ -392,7 +391,7 @@ by move/(eq_ind (x,x) (fun z => x = z.1) erefl _).
 Qed.
 
 Definition fset_diagE [K : choiceType] (A : {fset K}) :
-  fset_diag A = [fset ((x, y) : prod_choiceType K K) | x in A, y in A & x == y].
+  fset_diag A = [fset ((x, y) : K * K) | x in A, y in A & x == y].
 Proof.
 apply/fsetP => -[a b]; apply/idP/idP.
   case/imfsetP=> x /= ? ->.
@@ -409,7 +408,7 @@ Qed.
 
 Lemma fsetMDdiag [K : choiceType] (A : {fset K}) :
   (A `*` A) `\` fset_diag A =
-    [fset ((x, y) : prod_choiceType K K) | x in A, y in A & x != y].
+    [fset ((x, y) : K * K) | x in A, y in A & x != y].
 Proof.
 apply/fsetP => -[a b]; apply/idP/idP.
   rewrite 2!inE /= => /andP /= [] abS /andP [] aS bS.

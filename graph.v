@@ -564,7 +564,7 @@ Proof.
 Import Order.TotalTheory.
 rewrite -(foldr_map (fun S => #|` S|)) foldrE big_map.
 rewrite /nminmatch -[in LHS]big_filter.
-apply: perm_big_AC; [exact:minA | exact:minC |].
+apply: perm_big.
 apply uniq_perm; [exact/filter_uniq/index_enum_uniq | exact: fset_uniq |].
 move=> S.
 by rewrite mem_filter mem_index_enum andbT.
@@ -620,7 +620,7 @@ have R_tot_max : forall A , total_on A R -> exists t, forall s, A s -> R s t.
   by apply: bigfcup_sup; [rewrite mem_index_enum | rewrite inE].
 have [max [RSmax Hmax]] := Zorn_over R_refl R_trans R_antisym R_tot_max [` SmG].
 exists (val max); split => //.
-apply/maximal_matchingP; split; first by rewrite -in_fsub fsubT.
+apply/maximal_matchingP; split; first by rewrite -in_fsub fsubT inE.
 move=> U maxU; apply/negP => UmG.
 move: (Hmax [` UmG] (fproper_sub maxU)) (maxU) => <- /=.
 exact /negP /fproper_irrefl.

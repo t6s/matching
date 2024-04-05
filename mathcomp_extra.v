@@ -2,7 +2,6 @@ From mathcomp Require Import all_ssreflect. (* from mathcomp *)
 From mathcomp Require Import finmap. (* from finmap *)
 From mathcomp Require Import mathcomp_extra. (* from analysis *)
 From mathcomp Require boolp classical_sets. (* from analysis *)
-From infotheo Require ssr_ext.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -76,8 +75,12 @@ apply/idP/idP; first by move /eqP /inord_inj => /(_ _ _) /eqP; apply.
 by move/eqP ->.
 Qed.
 
+(* copied from infotheo/lib/ssr_ext.v *)
+Lemma ord2 (i : 'I_2) : (i == ord0) || (i == Ordinal (erefl (1 < 2))).
+Proof. by case: i => -[|[|]]. Qed.
+
 Lemma ord2_neq0 (x : 'I_2) : (x != ord0) = (x == Ordinal (erefl (1 < 2))).
-Proof. by apply/idP/idP; case/orP: (ssr_ext.ord2 x) => /eqP ->. Qed.
+Proof. by apply/idP/idP; case/orP: (ord2 x) => /eqP ->. Qed.
 End ordinal_ext.
 
 Section bigop_ext.

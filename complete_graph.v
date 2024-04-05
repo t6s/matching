@@ -1,7 +1,6 @@
 From mathcomp Require Import all_ssreflect. (* from mathcomp *)
 From mathcomp Require Import finmap multiset. (* from finmap *)
 From mathcomp Require Import mathcomp_extra classical_sets. (* from analysis *)
-From infotheo Require Import subgraph_partition.
 Require Import mathcomp_extra graph.
 
 Set Implicit Arguments.

@@ -125,7 +125,7 @@ End def.
 End CompleteGraph.
 
 Notation "`K T" := (CompleteGraph.t T) (at level 0, format "`K T").
-Notation "`K_ n" := (CompleteGraph.t [finType of 'I_n])
+Notation "`K_ n" := (CompleteGraph.t 'I_n)
                      (at level 1, format "`K_ n").
 
 Section is_complete_graph.

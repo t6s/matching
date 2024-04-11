@@ -194,8 +194,8 @@ End matching.
 
 
 Module matching_trivIbound_counter_example.
-Definition V := [finType of 'I_2].
-Definition E := [finType of 'I_2].
+Definition V := 'I_2.
+Definition E := 'I_2.
 Definition d (_ : E) : {fset V} := fsetT V.
 Lemma axiom (e : E) : #|` d e | = 2.
 Proof. by rewrite cardfsT card_ord. Qed.
@@ -219,8 +219,8 @@ Qed.
 End matching_trivIbound_counter_example.
 
 Module matching_inj_boundary_counter_example.
-Definition V := [finType of 'I_3].
-Definition E := [finType of 'I_2].
+Definition V := 'I_3.
+Definition E := 'I_2.
 Notation v0 := (ord0 : V).
 Notation v1 := ((Ordinal (erefl (1 < 3))) : V).
 Notation v2 := ((Ordinal (erefl (2 < 3))) : V).

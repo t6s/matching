@@ -143,6 +143,72 @@ Definition inj_boundary :=
 
 Definition trivIbound := trivIfset [fset `d(x) | x in S].
 
+Lemma is_matching_cardP : 
+  is_matching <-> {in S & S, forall e f, e != f -> #|` `d(e) `&` `d(f) | = 0}.
+Proof.
+split.
+  move /is_matchingP.  
+  rewrite /fdisjoint.
+  move=> H e f eS fS ef.
+  have:= H e f eS fS ef.  
+  move /eqP ->.
+  exact:cardfs0.
+rewrite /fdisjoint.
+move=> H.
+apply/is_matchingP.
+move=> e f eS fS ef.
+have:= H e f eS fS ef.
+move /eqP.
+by rewrite cardfs_eq0.
+Qed.
+
+Lemma inj_boundary_cardP :
+  inj_boundary <-> {in S & S, forall e f, e != f -> #|` `d(e) `&` `d(f) | \in [fset 0; 1]}.
+Proof.
+split.  
+  rewrite /inj_boundary /injective.
+  (*move=> + e f. *) 
+  move=> Sib e f eS fS ef.
+  rewrite !inE.
+  have:= Sib e f eS fS.
+  have[]:= eqVneq `d(e) `d(f).
+    move/[swap] /[apply]. 
+    move=>ef'.
+    move:ef.
+    by rewrite ef' eqxx.  
+  move=> dedf ?.    
+  rewrite cardfsI !boundary_card2 addn2.
+  
+  move:dedf.
+  rewrite eqEfsubset.
+  apply /contraR.
+    have: #|` `d(e) `&` `d(f)| <= 2.
+    rewrite -(boundary_card2 e).
+    apply: fsubset_leqif_cards. 
+    exact: fsubsetIl.
+ (* case/boolP: (`d(e) == `d(f)).*) 
+ Abort.
+
+Lemma trivIbound_cardP :
+  trivIbound <-> {in S & S, forall e f : `E(G), #|` `d(e) `&` `d(f)| \in [fset 0; 2]}.
+Proof.
+split.
+  move/trivIfsetP=> H e f eS fS; rewrite !inE.
+  have:= H `d(e) `d(f) => /[!in_imfset] // /(_ erefl erefl).
+  have [-> _ | dedf /(_ erefl) ] := eqVneq `d(e) `d(f).
+    by rewrite fsetIid boundary_card2 orbT.
+  by move/eqP->; rewrite cardfs0 eqxx.
+move=> H; apply/trivIfsetP=> A B /imfsetP [] e /= eS -> /imfsetP [] f /= fS -> dedf.
+rewrite -fsetI_eq0 -cardfs_eq0.
+have:= H e f eS fS; rewrite !inE=> /orP [] // /eqP dedf0.
+have:= cardfsD `d(e) `d(f).
+rewrite boundary_card2 dedf0 subnn => /eqP.
+rewrite cardfs_eq0 fsetD_eq0.
+rewrite -[X in is_true X -> _]andTb -dedf -fproperEneq.
+move/fproper_ltn_card.
+by rewrite !boundary_card2.
+Qed.
+
 Lemma matching_inj_boundary : is_matching -> inj_boundary.
 Proof.
 move=> MmG e1 e2 e1M e2M.

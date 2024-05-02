@@ -163,31 +163,33 @@ by rewrite cardfs_eq0.
 Qed.
 
 Lemma inj_boundary_cardP :
-  inj_boundary <-> {in S & S, forall e f, e != f -> #|` `d(e) `&` `d(f) | \in [fset 0; 1]}.
+  inj_boundary <->
+    {in S & S, forall e f, e != f -> #|` `d(e) `&` `d(f) | <= 1}.
 Proof.
-split.  
-  rewrite /inj_boundary /injective.
-  (*move=> + e f. *) 
-  move=> Sib e f eS fS ef.
-  rewrite !inE.
-  have:= Sib e f eS fS.
-  have[]:= eqVneq `d(e) `d(f).
-    move/[swap] /[apply]. 
-    move=>ef'.
-    move:ef.
-    by rewrite ef' eqxx.  
-  move=> dedf ?.    
-  rewrite cardfsI !boundary_card2 addn2.
-  
-  move:dedf.
-  rewrite eqEfsubset.
-  apply /contraR.
-    have: #|` `d(e) `&` `d(f)| <= 2.
-    rewrite -(boundary_card2 e).
-    apply: fsubset_leqif_cards. 
-    exact: fsubsetIl.
- (* case/boolP: (`d(e) == `d(f)).*) 
- Abort.
+split; last first.
+  move=> + e f eS fS dedf => /(_ e f eS fS).
+  have[] := eqVneq e f=> // _ /(_ erefl).
+  by rewrite dedf fsetIid boundary_card2.
+move=> + e f eS fS => /(_ e f eS fS).
+have[]:= eqVneq `d(e) `d(f); first by move=> -> /(_ erefl) ->; rewrite eqxx.
+move=> dedf ? ef.
+rewrite leqNgt; apply/negP=> H.
+(**)
+have:= H; apply/negP; rewrite -ltnNge.
+have:= fsubsetIl `d(e) `d(f) => /fsubset_leqif_cards.
+rewrite boundary_card2=> /ltn_leqif ->.
+rewrite eqEfsubset fsubsetIl /= fsubsetIidl.
+apply/negP=> H0.
+(**)
+have:= H; apply/negP; rewrite -ltnNge.
+have:= fsubsetIl `d(f) `d(e) => /fsubset_leqif_cards.
+rewrite (fsetIC `d(f)) (boundary_card2 f)=> /ltn_leqif ->.
+rewrite eqEfsubset fsubsetIr /= fsubsetIidr.
+apply/negP=> H1.
+(**)
+have:= dedf.
+by rewrite eqEfsubset H0 H1.
+Qed.
 
 Lemma trivIbound_cardP :
   trivIbound <-> {in S & S, forall e f : `E(G), #|` `d(e) `&` `d(f)| \in [fset 0; 2]}.

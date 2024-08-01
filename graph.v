@@ -1091,9 +1091,7 @@ rewrite 2!cardfE.
 set f : N -> M := fun n => [` (psi_M Mmax (val n)) ].
 apply: (leq_card f).
 move=> e0 e1.
-move/eqP => fe01.
-apply/eqP.
-move: fe01.
+move/eqP => fe01; apply/eqP; move: fe01.
 move/(psi_inj Nind).
 rewrite /f.
 by rewrite 2!fsvalP => /(_ erefl erefl).

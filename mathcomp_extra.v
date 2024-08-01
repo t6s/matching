@@ -1,5 +1,5 @@
 From mathcomp Require Import all_ssreflect. (* from mathcomp *)
-From mathcomp Require Import finmap. (* from finmap *)
+From mathcomp Require Import finmap multiset. (* from finmap *)
 From mathcomp Require Import mathcomp_extra. (* from analysis *)
 From mathcomp Require boolp classical_sets. (* from analysis *)
 
@@ -474,6 +474,22 @@ by rewrite fsetDv fproper0.
 Qed.
 
 End finmap_ext.
+
+Section multiset_ext.
+Local Open Scope mset_scope.
+Context {K : choiceType}.
+Implicit Types (a b c : K) (A B C D : {mset K}) (s : seq K).
+
+Lemma mset0Pn A : reflect (exists x, x \in A) (A != mset0).
+Proof.
+apply: (iffP idP); last first.
+  case=> x xA; apply/eqP=> A0.
+  by move: A0 xA ->; rewrite in_mset0.
+rewrite -size_mset_eq0 size_mset.
+rewrite sum_nat_seq_neq0=> /hasP [] x xfsA _.
+by exists x; rewrite -msuppE.
+Qed.
+End multiset_ext.
 
 Section misc.
 Local Open Scope fset_scope.

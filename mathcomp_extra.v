@@ -12,7 +12,7 @@ Import boolp.
 Import classical_sets.
 Local Open Scope classical_set_scope.
 
-Lemma Zorn_over T (R : T -> T -> Prop) :
+Lemma Zorn_over T (R : rel T) :
   (forall t, R t t) -> (forall r s t, R r s -> R s t -> R r t) ->
   (forall s t, R s t -> R t s -> s = t) ->
   (forall A : set T, total_on A R -> exists t, forall s, A s -> R s t) ->
@@ -21,8 +21,8 @@ Proof.
 move=> Rrefl Rtrans Rantisym Rtot_max u.
 set Tu := ({x : T | R u x}).
 set Ru := fun x y : Tu => R (sval x) (sval y).
-have Ru_refl x : Ru x x by [].
-have Ru_trans x y z : Ru x y -> Ru y z -> Ru x z by apply: Rtrans.
+have Ru_refl x : is_true (Ru x x) by exact: Rrefl.
+have Ru_trans x y z : Ru x y -> Ru y z -> Ru x z by exact: Rtrans.
 have Ru_antisym : forall x y, Ru x y -> Ru y x -> x = y.
   by move=> [? ?] [? ?] *; exact/eq_exist/Rantisym.
 have Ru_tot_max Au : total_on Au Ru -> exists y, forall x, Au x -> Ru x y.
@@ -513,30 +513,6 @@ Lemma fset2_xor [K : choiceType] (x a b : K) :
 Proof. rewrite !inE; exact: eq_span_xor. Qed.
 
 End misc.
-
-Section order_ext.
-Import Order.
-Import TotalTheory.
-Local Open Scope order_scope.
-Variables (d : unit) (T : orderType d).
-Variables (I : finType) (x : T).
-Implicit Types (P : pred I) (F : I -> T).
-
-(* These are fixes to the lemmas of the same name in mathcomp (PR-ed). *)
-Lemma eq_bigmax j P F : P j -> (forall i, P i -> x <= F i) ->
-  {i0 | i0 \in P & \big[max/x]_(i | P i) F i = F i0}.
-Proof.
-by move=> Pi0 Hx; rewrite (bigmax_eq_arg _ _ _ _ Pi0) //; eexists => //; case:arg_maxP.
-Qed.
-Lemma eq_bigmin j P F : P j -> (forall i, P i -> F i <= x) ->
-  {i0 | i0 \in P & \big[min/x]_(i | P i) F i = F i0}.
-Proof.
-by move=> Pi0 Hx; rewrite (bigmin_eq_arg _ _ _ _ Pi0) //; eexists => //; case:arg_minP.
-Qed.
-
-End order_ext.
-Arguments eq_bigmax {d T I x} j.
-Arguments eq_bigmin {d T I x} j.
 
 Section boolp_finmap_extra.
 Local Open Scope fset_scope.

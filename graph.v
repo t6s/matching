@@ -9,6 +9,8 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Import Order.Theory.
+
 Reserved Notation "`V G" (at level 0, format "`V G").
 Reserved Notation "`E G" (at level 0, format "`E G").
 Reserved Notation "`d x" (at level 0, format "`d x").

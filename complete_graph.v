@@ -335,3 +335,144 @@ by have:= exists_nminmatch G => -[] M /H -> ->.
 Qed.
 
 End is_complete_graph.
+
+Module CompleteBipartiteGraph.
+Section def.
+Variables V1 V2 : finType.
+Definition E :=
+  [fset [fset p.1; p.2] |
+    p in [fset inl x | x in V1] `*` [fset inr y | y in V2]].
+(*
+Definition E21 :=
+  [fset [fset p.2; p.1] |
+    p in [fset inl x | x in V1] `*` [fset inr y | y in V2]].
+Definition E := E12 `|` E21. 
+*)
+Definition boundary (e : E) : {fset V1 + V2} := val e.
+Lemma axiom (e : E) : #|` boundary e| = 2.  
+Proof.
+case: e => /= e.  
+rewrite /boundary /=.
+move /imfsetP => /= [] [] x y.
+rewrite inE /= => /andP [].
+move /imfsetP => /= [] a ? ->.
+move /imfsetP => /= [] b ? -> ->.
+by rewrite cardfs2.
+Qed.  
+Definition t := LooplessUndirectedGraph.mk axiom.     
+End def.
+End CompleteBipartiteGraph.
+
+Notation "`K2"
+  := (CompleteBipartiteGraph.t)
+       (at level 0, format "`K2").
+Notation "`K2_ m n"
+  := (CompleteBipartiteGraph.t `I_m `I_n)
+       (at level 1, format "`K2_ m n").
+
+Section is_complete_bipartite.
+Implicit Type G : llugraph.  
+
+Definition is_complete_bipartite_graph G :=
+  injective (fun e : `E(G) => `d(e)) /\
+    exists V_1 V_2 : {fset `V(G)},
+      fsetT `V(G) = V_1 `|` V_2 /\ V_1 `&` V_2 = fset0 /\
+        forall v : V_1, forall w : V_2,
+        exists e : `E(G), `d(e) = [fset \val v; \val w].
+
+Lemma KV1V2_is_complete_bipartite (V1 V2 : finType) :
+  is_complete_bipartite_graph (`K2 V1 V2 ).
+Proof.
+rewrite /is_complete_bipartite_graph /=.  
+split; first by move=> *; apply: val_inj.
+exists [fset inl x | x in V1].
+exists [fset inr y | y in V2].
+split.
+  apply/fsetP => /= -[] a. 
+    rewrite !inE /=.  
+    by rewrite in_imfset /=.
+  rewrite !inE /=.
+  by rewrite in_imfset //= orbT.
+split.
+  apply/disjoint_fsetI0 /fdisjointP.
+  move=> a /imfsetP [] x ? ->. 
+  by apply/imfsetP => -[] y ?.
+move=> v w.
+have: \val v \in [fset inl x | x in V1].
+  exact:valP.
+move/imfsetP => [] x ? ->.
+have: \val w \in [fset inr y | y in V2].
+  exact:valP.
+move/imfsetP => -[] y ? ->.
+have xyP: [fset inl x; inr y] \in CompleteBipartiteGraph.E V1 V2.
+  apply /imfsetP => /=.
+  exists (inl x, inr y) => //.
+  by rewrite !inE /= !in_imfset /=.
+by exists [` xyP].
+Qed.            
+  
+Lemma inl_inj (T U : Type) : injective (@inl T U).
+Proof. by move=> ? ? ; inversion 1. Qed.
+
+Lemma inr_inj (T U : Type) : injective (@inr T U).
+Proof. by move=> ? ? ; inversion 1. Qed.
+
+
+Lemma card_VK2 (V1 V2 : finType) :
+  #| `V(`K2 V1 V2)| = (#| V1| + #| V2|)%N.
+Proof. exact: card_sum. Qed.
+
+Lemma card_EK2 (V1 V2 : finType) :
+  #| `E(`K2 V1 V2)| = (#| V1| *  #| V2|)%N.
+Proof.
+rewrite /`K2 /= /CompleteBipartiteGraph.E /= .
+rewrite -cardfE /=.
+rewrite card_in_imfset /=.
+  rewrite cardfsM /= card_imfset; last exact: inl_inj. 
+  rewrite card_imfset /=; last exact: inr_inj.    
+  by rewrite !cardE.
+move=> x y /=.
+rewrite (surjective_pairing x).
+rewrite (surjective_pairing y).
+rewrite !inE /= => /andP [] /=.
+move=> /imfsetP [] x1 /= ? ->.
+move=> /imfsetP [] x2 /= ? ->.
+move=> /andP [] /=.
+move=> /imfsetP [] y1 /= ? ->.
+move=> /imfsetP [] y2 /= ? ->.
+move/eqP.
+rewrite eqEfsubset.
+case/andP.
+move/fsubsetP. 
+move/(_ (inl x1)).
+rewrite !inE eqxx /= => /(_ erefl) /orP [] //.
+move/eqP => xy1; have:= inl_inj xy1; clear xy1. (*?*)
+move->.
+move=> /fsubsetP.
+move/(_ (inr y2)).
+rewrite !inE eqxx /= => /(_ erefl).
+move/eqP => xy2; have:= inr_inj xy2; clear xy2.
+by move->.
+Qed.
+  
+Lemma nindmatch_complete_bipartite G :
+  is_complete_bipartite_graph G -> nindmatch G = 1.   
+Proof.
+move=> icbg.  
+rewrite /nindmatch /=.
+rewrite /induced_matching /=.
+Abort.
+
+Search "minn".
+
+Lemma nminmatch_complete_bipartite (V1 V2 : finType) :
+  nminmatch (`K2 V1 V2) = minn #| V1| #| V2|.
+Proof.
+Abort.
+
+Lemma nmatch_complete_bipartite (V1 V2 : finType) :
+  nmatch (`K2 V1 V2) = minn #| V1| #| V2|.
+Proof.
+Abort.
+
+
